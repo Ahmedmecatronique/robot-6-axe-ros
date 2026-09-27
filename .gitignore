@@ -1,0 +1,48 @@
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Environnements virtuels ------------------------------------------------
+windows/.venv/
+.venv/
+venv/
+env/
+
+# --- ROS 2 / colcon ----------------------------------------------------------
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+**/build/
+**/install/
+**/log/
+
+# --- STM32CubeIDE / firmware --------------------------------------------------
+firmware/**/Debug/
+firmware/**/Release/
+firmware/.metadata/
+firmware/**/*.o
+firmware/**/*.elf
+firmware/**/*.bin
+firmware/**/*.hex
+firmware/**/*.map
+firmware/microros_static_library/
+
+# --- Sessions rosbag2 / apprentissage (données locales, pas du code) -------------
+robot_bags/
+*.bag
+*.db3
+
+# --- OS / éditeurs -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# --- Divers -------------------------------------------------------------------
+*.log
+*.tmp

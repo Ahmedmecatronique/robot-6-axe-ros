@@ -1,0 +1,11 @@
+# Saisie d'un objet : ouvrir pince -> approche -> descente -> fermer -> remontée -> repos.
+# Si use_latest_target est vrai, la dernière /target_pose reçue est utilisée.
+bool use_latest_target
+geometry_msgs/PoseStamped target
+float64 approach_height            # hauteur d'approche au-dessus de la cible (m), 0 = valeur par défaut
+---
+bool success
+string message
+---
+string phase
+float32 progress                   # 0.0 .. 1.0

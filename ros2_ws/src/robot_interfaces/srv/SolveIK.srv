@@ -1,0 +1,11 @@
+# Calcule la cinématique inverse SANS déplacer le robot (prévisualisation).
+geometry_msgs/PoseStamped target   # pose de l'outil dans base_link
+float64[] seed                     # configuration de départ (vide = position actuelle)
+---
+bool reachable                     # une solution valide (limites respectées) existe
+bool near_singularity              # la solution est proche d'une singularité
+string message                     # explication lisible (français)
+float64[] joint_positions          # solution retenue (rad)
+float64 position_error             # erreur de position résiduelle (m)
+float64 orientation_error          # erreur d'orientation résiduelle (rad)
+string method                      # "analytical" ou "numerical"

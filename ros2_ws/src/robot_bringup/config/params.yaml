@@ -1,0 +1,54 @@
+# Paramètres des nœuds (chargés par core.launch.py / pi_real.launch.py / sim.launch.py).
+# Le nom de la clé = nom du nœud. Modifie ici plutôt que dans le code.
+
+fk_node:
+  ros__parameters:
+    publish_rate: 50.0            # Hz  (/end_effector_pose)
+    broadcast_dh_frames: true     # diffuse dh_1..dh_6 et tool_fk pour comparer avec l'URDF dans RViz
+
+ik_node:
+  ros__parameters:
+    reject_near_singularity: false   # true : refuse les poses proches d'une singularité
+    tol_position: 1.0e-4             # m
+    tol_orientation: 1.0e-3          # rad
+
+trajectory_node:
+  ros__parameters:
+    rate: 100.0                   # Hz : /joint_commands (sert aussi de heartbeat au STM32)
+    profile: quintic              # quintic | trapezoid
+    speed_scale: 0.5              # 0.02..1.0 : commence LENTEMENT pour les premiers essais
+    require_ready: true
+    limit_margin: 0.002
+
+safety_node:
+  ros__parameters:
+    heartbeat_rate: 10.0
+    joint_state_timeout: 0.3
+    limit_margin_deg: 2.0
+    following_error_max_deg: 10.0
+    following_error_time: 0.5
+
+sim_robot_node:
+  ros__parameters:
+    rate: 100.0
+    start_ready: true             # false : démarre désactivé/non référencé pour tester Homing + Enable
+    watchdog_ms: 300.0
+
+pick_node:
+  ros__parameters:
+    approach_height: 0.10         # m au-dessus de l'objet
+    grasp_z_offset: 0.0
+    gripper_time: 1.0
+    return_to_rest: true
+
+vision_node:
+  ros__parameters:
+    source: topic                 # topic | opencv | picamera2  (surchargé par l'argument camera_source)
+    detector: aruco               # aruco | hsv
+    aruco_dict: DICT_4X4_50
+    marker_length: 0.04           # m : côté du carré noir du marqueur imprimé
+    target_id: -1                 # -1 : n'importe quel marqueur
+    plane_z: 0.02                 # m : hauteur du centre de l'objet (détecteur HSV)
+    hsv_lower: [170, 120, 70]     # rouge
+    hsv_upper: [10, 255, 255]
+    fps: 15.0

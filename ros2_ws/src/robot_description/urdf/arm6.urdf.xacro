@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+  Bras 6 axes (anthropomorphe + poignet sphérique), généré à partir de config/robot.yaml.
+
+  Correspondance DH standard -> URDF :
+    A_i = Rz(theta_i) Tz(d_i) Tx(a_i) Rx(alpha_i)  =  [Tz(d_i) Rz(theta_i)] [Tx(a_i) Rx(alpha_i)]
+  Le repère URDF "link_i" est donc  U_i = T_0^(i-1) * Tz(d_i) * Rz(theta_i).
+  L'origine du joint i (dans link_(i-1)) vaut  Tx(a_(i-1)) Rx(alpha_(i-1)) Tz(d_i) [Rz(offset_i)],
+  puis l'articulation tourne autour de Z.  Comme a_6 = alpha_6 = 0, tool0 == repère DH n°6.
+  Le décalage theta_offset est réalisé par un joint fixe intermédiaire (exact, sans angle d'Euler).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="arm6">
+
+  <xacro:arg name="config" default="$(find robot_description)/config/robot.yaml"/>
+
+  <xacro:property name="cfg" value="${xacro.load_yaml('$(arg config)')}"/>
+  <xacro:property name="rb"  value="${cfg['robot']}"/>
+  <xacro:property name="dh"  value="${rb['dh']}"/>
+  <xacro:property name="lim" value="${rb['limits']}"/>
+  <xacro:property name="toff" value="${rb['theta_offset_deg']}"/>
+
+  <!-- d_i, a_i (i = 1..6) et alpha_i (rad) : structure fixe anthropomorphe -->
+  <xacro:property name="D"     value="${[dh['d1'], 0.0, 0.0, 0.0, 0.0, dh['d6']]}"/>
+  <xacro:property name="A"     value="${[0.0, dh['a2'], dh['a3'], 0.0, 0.0, 0.0]}"/>
+  <xacro:property name="ALPHA" value="${[pi/2, 0.0, 0.0, pi/2, -pi/2, 0.0]}"/>
+
+  <material name="blue"><color rgba="0.20 0.40 0.85 1.0"/></material>
+  <material name="orange"><color rgba="0.95 0.55 0.15 1.0"/></material>
+  <material name="grey"><color rgba="0.45 0.45 0.48 1.0"/></material>
+
+  <!-- ======================= Macro : un joint DH + son lien ======================= -->
+  <xacro:macro name="dh_joint" params="i parent a_prev alpha_prev d off lo hi vel color a_seg d_seg">
+
+    <!-- Cas simple : décalage nul ou alpha nul -> un seul joint fixe -->
+    <xacro:if value="${off == 0.0 or alpha_prev == 0.0}">
+      <link name="frame_${i}"/>
+      <joint name="fixed_${i}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="frame_${i}"/>
+        <origin xyz="${a_prev} ${-d*sin(alpha_prev)} ${d*cos(alpha_prev)}" rpy="${alpha_prev} 0 ${off}"/>
+      </joint>
+    </xacro:if>
+
+    <!-- Cas général : Rx(alpha) puis Rz(offset) via deux joints fixes -->
+    <xacro:unless value="${off == 0.0 or alpha_prev == 0.0}">
+      <link name="frame_pre_${i}"/>
+      <joint name="fixed_pre_${i}" type="fixed">
+        <parent link="${parent}"/>
+        <child link="frame_pre_${i}"/>
+        <origin xyz="${a_prev} ${-d*sin(alpha_prev)} ${d*cos(alpha_prev)}" rpy="${alpha_prev} 0 0"/>
+      </joint>
+      <link name="frame_${i}"/>
+      <joint name="fixed_off_${i}" type="fixed">
+        <parent link="frame_pre_${i}"/>
+        <child link="frame_${i}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${off}"/>
+      </joint>
+    </xacro:unless>
+
+    <joint name="joint_${i}" type="revolute">
+      <parent link="frame_${i}"/>
+      <child link="link_${i}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${lo}" upper="${hi}" effort="10.0" velocity="${vel}"/>
+    </joint>
+
+    <link name="link_${i}">
+      <!-- moyeu de l'articulation (axe Z du repère) -->
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><cylinder radius="0.045" length="0.07"/></geometry>
+        <material name="grey"/>
+      </visual>
+      <!-- segment d : de l'origine vers -Z (jusqu'au repère précédent) -->
+      <xacro:if value="${d_seg > 0.0}">
+        <visual>
+          <origin xyz="0 0 ${-d_seg/2}" rpy="0 0 0"/>
+          <geometry><cylinder radius="0.03" length="${d_seg}"/></geometry>
+          <material name="${color}"/>
+        </visual>
+      </xacro:if>
+      <!-- segment a : de l'origine vers +X (vers l'articulation suivante) -->
+      <xacro:if value="${a_seg > 0.0}">
+        <visual>
+          <origin xyz="${a_seg/2} 0 0" rpy="0 ${pi/2} 0"/>
+          <geometry><cylinder radius="0.03" length="${a_seg}"/></geometry>
+          <material name="${color}"/>
+        </visual>
+      </xacro:if>
+    </link>
+  </xacro:macro>
+
+  <!-- ================================= Base ================================= -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.09" length="0.04"/></geometry>
+      <material name="grey"/>
+    </visual>
+  </link>
+
+  <!-- ================================ Joints 1..6 ================================ -->
+  <xacro:dh_joint i="1" parent="base_link" a_prev="0.0" alpha_prev="0.0"
+                  d="${D[0]}" off="${radians(toff[0])}"
+                  lo="${radians(lim['position_min_deg'][0])}" hi="${radians(lim['position_max_deg'][0])}"
+                  vel="${radians(lim['velocity_max_deg_s'][0])}" color="blue" a_seg="${A[0]}" d_seg="${D[0]}"/>
+  <xacro:dh_joint i="2" parent="link_1" a_prev="${A[0]}" alpha_prev="${ALPHA[0]}"
+                  d="${D[1]}" off="${radians(toff[1])}"
+                  lo="${radians(lim['position_min_deg'][1])}" hi="${radians(lim['position_max_deg'][1])}"
+                  vel="${radians(lim['velocity_max_deg_s'][1])}" color="orange" a_seg="${A[1]}" d_seg="${D[1]}"/>
+  <xacro:dh_joint i="3" parent="link_2" a_prev="${A[1]}" alpha_prev="${ALPHA[1]}"
+                  d="${D[2]}" off="${radians(toff[2])}"
+                  lo="${radians(lim['position_min_deg'][2])}" hi="${radians(lim['position_max_deg'][2])}"
+                  vel="${radians(lim['velocity_max_deg_s'][2])}" color="blue" a_seg="${A[2]}" d_seg="${D[2]}"/>
+  <xacro:dh_joint i="4" parent="link_3" a_prev="${A[2]}" alpha_prev="${ALPHA[2]}"
+                  d="${D[3]}" off="${radians(toff[3])}"
+                  lo="${radians(lim['position_min_deg'][3])}" hi="${radians(lim['position_max_deg'][3])}"
+                  vel="${radians(lim['velocity_max_deg_s'][3])}" color="orange" a_seg="${A[3]}" d_seg="${D[3]}"/>
+  <xacro:dh_joint i="5" parent="link_4" a_prev="${A[3]}" alpha_prev="${ALPHA[3]}"
+                  d="${D[4]}" off="${radians(toff[4])}"
+                  lo="${radians(lim['position_min_deg'][4])}" hi="${radians(lim['position_max_deg'][4])}"
+                  vel="${radians(lim['velocity_max_deg_s'][4])}" color="blue" a_seg="${A[4]}" d_seg="${D[4]}"/>
+  <xacro:dh_joint i="6" parent="link_5" a_prev="${A[4]}" alpha_prev="${ALPHA[4]}"
+                  d="${D[5]}" off="${radians(toff[5])}"
+                  lo="${radians(lim['position_min_deg'][5])}" hi="${radians(lim['position_max_deg'][5])}"
+                  vel="${radians(lim['velocity_max_deg_s'][5])}" color="orange" a_seg="${A[5]}" d_seg="${D[5]}"/>
+
+  <!-- ================================ Outil (TCP) ================================ -->
+  <link name="tool0">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><sphere radius="0.018"/></geometry>
+      <material name="orange"/>
+    </visual>
+  </link>
+  <joint name="tool_fixed" type="fixed">
+    <parent link="link_6"/>
+    <child link="tool0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>

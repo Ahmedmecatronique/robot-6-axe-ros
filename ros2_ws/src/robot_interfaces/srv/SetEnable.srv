@@ -1,0 +1,6 @@
+# Active (true) ou désactive (false) les moteurs.
+# enable=true efface aussi un arrêt d'urgence / un défaut verrouillé.
+bool enable
+---
+bool success
+string message

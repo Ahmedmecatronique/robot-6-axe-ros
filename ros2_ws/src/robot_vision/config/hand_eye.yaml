@@ -1,0 +1,9 @@
+# Pose de la caméra dans le repère de la base (calibration main-œil, config "eye-to-hand" :
+# caméra FIXE regardant l'espace de travail).
+# VALEUR PAR DÉFAUT (non calibrée) : caméra à 45 cm devant la base, 70 cm de haut, regardant vers le bas.
+# À remplacer par le résultat de : ros2 run robot_vision hand_eye_calibration   (docs/CALIBRATION.md)
+parent_frame: base_link
+camera_frame: camera_optical_frame
+translation: [0.45, 0.0, 0.70]          # mètres
+quaternion_xyzw: [1.0, 0.0, 0.0, 0.0]   # axe optique z dirigé vers -Z de la base (regard vers le bas)
+calibrated: false

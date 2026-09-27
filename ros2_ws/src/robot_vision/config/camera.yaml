@@ -1,0 +1,11 @@
+# Paramètres intrinsèques de la caméra (Pi Camera v3, 640x480).
+# VALEURS APPROXIMATIVES (champ de vision horizontal ~66°) : à remplacer par le résultat de
+#   ros2 run robot_vision camera_calibration   (voir docs/CALIBRATION.md)
+# Important : calibrer avec la MISE AU POINT FIXE utilisée en fonctionnement (autofocus désactivé).
+image_width: 640
+image_height: 480
+camera_matrix: [493.0,   0.0, 320.0,
+                  0.0, 493.0, 240.0,
+                  0.0,   0.0,   1.0]
+dist_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
+calibrated: false

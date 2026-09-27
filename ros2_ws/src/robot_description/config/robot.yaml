@@ -1,0 +1,68 @@
+# =============================================================================
+#  Paramètres du bras 6 axes  -  SOURCE UNIQUE DE VÉRITÉ
+#  Lu par : URDF (xacro), robot_kinematics, safety_node, IHM, et le générateur
+#  du firmware (tools/gen_firmware_config.py).  Adapte ces valeurs à ton robot.
+# =============================================================================
+robot:
+  name: arm6
+  base_frame: base_link
+  tool_frame: tool0
+  joint_names: [joint_1, joint_2, joint_3, joint_4, joint_5, joint_6]
+
+  # --- Longueurs (mètres) -----------------------------------------------------
+  #  d1 : hauteur de l'axe d'épaule au-dessus de la base
+  #  a2 : longueur du bras (épaule -> coude)
+  #  a3 : longueur de l'avant-bras (coude -> centre du poignet)
+  #  d6 : distance centre du poignet -> bride/outil (TCP)
+  #  Hypothèse de la solution analytique : pas de décalage d'épaule (a1 = 0)
+  #  ni de décalage d'avant-bras (d4 = 0), poignet sphérique.
+  dh:
+    d1: 0.30
+    a2: 0.30
+    a3: 0.30
+    d6: 0.10
+
+  # --- Décalage entre l'angle DH (theta) et l'angle de l'articulation (q) ------
+  #  theta_i = q_i + theta_offset_i.  Avec offset_2 = 90° : q = 0 pour toutes les
+  #  articulations correspond au bras DROIT VERTICAL ("pose zéro").
+  theta_offset_deg: [0.0, 90.0, 0.0, 0.0, 0.0, 0.0]
+
+  # --- Limites articulaires (degrés, vus côté articulation, après réducteur) ---
+  limits:
+    position_min_deg: [-170.0, -90.0, -150.0, -170.0, -120.0, -170.0]
+    position_max_deg: [ 170.0,  90.0,  150.0,  170.0,  120.0,  170.0]
+    velocity_max_deg_s: [30.0, 30.0, 30.0, 45.0, 45.0, 90.0]
+    acceleration_max_deg_s2: [60.0, 60.0, 60.0, 90.0, 90.0, 180.0]
+
+  # --- Poses nommées ------------------------------------------------------------
+  poses:
+    rest_deg: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]      # pose de repos (bras vertical)
+
+  # --- Espace de travail (sécurité logicielle) ------------------------------------
+  workspace:
+    z_min: 0.02          # m : refuse toute cible sous ce plan (table)
+
+# =============================================================================
+#  Matériel (utilisé par le firmware STM32 via tools/gen_firmware_config.py)
+#  NEMA 17 + A4988 + encodeur monté sur l'arbre moteur.
+# =============================================================================
+hardware:
+  motor_full_steps_per_rev: 200
+  microsteps: 16                    # MS1=MS2=MS3=HIGH sur l'A4988 (1/16)
+  gear_ratio: [30.0, 30.0, 30.0, 20.0, 20.0, 10.0]   # tours moteur / tour articulation
+  encoder_ppr: [1000, 1000, 1000, 1000, 1000, 1000]  # impulsions/tour (x4 en quadrature)
+  encoder_sign: [1, 1, 1, 1, 1, 1]  # +1/-1 : sens de l'encodeur par rapport à la rotation positive
+  dir_sign: [1, 1, 1, 1, 1, 1]      # +1/-1 : sens de la broche DIR par rapport à la rotation positive
+  max_step_rate_hz: 8000            # fréquence STEP max (plafond 10 kHz avec le timer 20 kHz)
+  # Homing : direction de recherche du fin de course (-1 = vers le minimum, +1 = vers le maximum)
+  home_dir: [-1, -1, 1, -1, -1, -1]
+  home_speed_deg_s: [10.0, 10.0, 10.0, 15.0, 15.0, 30.0]
+  home_order: [3, 4, 5, 2, 1, 0]    # ordre de homing (indices 0..5) : poignet d'abord, base en dernier
+  # Réglage PID (position en rad -> vitesse articulaire rad/s), identique pour les 6 axes au départ
+  pid:
+    kp: [6.0, 6.0, 6.0, 8.0, 8.0, 8.0]
+    ki: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    kd: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    deadband_deg: 0.05
+    following_error_max_deg: 6.0    # au-delà pendant 200 ms -> défaut (moteur décroché ?)
+  watchdog_ms: 300                  # aucune consigne / heartbeat reçu -> arrêt

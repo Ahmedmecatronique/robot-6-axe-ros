@@ -1,0 +1,11 @@
+# Pilotage de rosbag2 côté robot (bag_node) : l'IHM n'a pas besoin d'avoir ROS 2 installé.
+#   record_start : démarre un enregistrement (name vide = nom horodaté)
+#   record_stop  : arrête l'enregistrement
+#   play         : rejoue la session `name`, redirigée vers /replay/... (aucune commande vers le robot)
+#   play_stop    : arrête le rejeu
+#   list         : rafraîchit la liste (publiée aussi sur /bag/status)
+string command
+string name
+---
+bool success
+string message

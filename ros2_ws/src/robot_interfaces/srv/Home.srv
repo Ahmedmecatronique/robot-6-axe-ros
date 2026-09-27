@@ -1,0 +1,6 @@
+# Lance la procédure de homing (recherche des fins de course).
+# La réponse est immédiate (accusé de réception) ; la progression se suit
+# via /stm32/status (état HOMING -> READY).
+---
+bool success
+string message
