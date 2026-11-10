@@ -4,5 +4,5 @@ pyqtgraph>=0.13
 PyOpenGL>=3.1.7
 numpy>=1.24
 PyYAML>=6.0
-opencv-python-headless>=4.8
+opencv-python-headless>=4.8,<5    # OpenCV 5 retire cv2.calibrateHandEye (calibration main-œil)
 roslibpy>=1.7

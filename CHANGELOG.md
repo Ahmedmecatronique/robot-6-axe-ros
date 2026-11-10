@@ -1,5 +1,20 @@
 # Journal des changements
 
+## v1.2 — Validation sur le robot réel et en simulation ROS 2
+
+Le projet est maintenant validé sur le **bras réel** (Pi 4 + Nucleo-F446RE + 6 × NEMA 17/A4988 + caméra) et en
+**simulation ROS 2 complète**. Détail des vérifications : [README §7](README.md#7-état-de-validation).
+
+* **Matériel** : firmware compilé et flashé, liaison micro-ROS, 6 axes avec encodeurs, fins de course et homing,
+  PID réglés, arrêt d'urgence et watchdog, caméra et saisie d'objet, IHM Windows pilotant le robot réel.
+* **Simulation ROS 2** (Windows 11 + WSL2 Ubuntu 22.04, Humble) : 7 paquets compilés, tous les nœuds démarrent,
+  `/joint_states` à 100 Hz, consigne `/joint_goal` atteinte, IHM Windows connectée par le vrai rosbridge
+  (jusqu'ici seul un faux serveur avait été testé).
+* **Tests** : 61 tests qui passent tous (21 cinématique + 10 vision + 30 IHM ; 54 en v1.0).
+* **Correctif** : `windows/requirements.txt` limite OpenCV à `< 5`. OpenCV 5 retire `cv2.calibrateHandEye`, ce
+  qui cassait la calibration main-œil (et son test) sur une installation neuve.
+* **Docs** : nombre de tests harmonisé (README, `docs/TESTS.md`), feuille de route mise à jour.
+
 ## v1.1 — IHM plus performante (côté PC)
 
 Objectif : une IHM plus fluide et plus réactive, avec une **latence réelle** mesurée. Chaque optimisation a été

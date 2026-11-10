@@ -15,7 +15,8 @@ Règles de sécurité pour toutes les étapes matérielles :
 ```bash
 cd ros2_ws/src/robot_kinematics && python -m pytest tests -q          # 21 tests : FK/IK, singularités, trajectoires
 cd ../robot_vision && PYTHONPATH=../robot_kinematics:. python -m pytest tests -q   # 10 tests : ArUco, HSV, projection, main-œil
-cd ../robot_gui && QT_QPA_PLATFORM=offscreen PYTHONPATH=../robot_kinematics:. python -m pytest tests -q   # IHM : fumée + WebBridge (faux rosbridge) + mode démo
+cd ../robot_gui && QT_QPA_PLATFORM=offscreen PYTHONPATH=../robot_kinematics:. python -m pytest tests -q   # 30 tests : IHM, WebBridge (faux rosbridge), mode démo
+# Total : 61 tests (21 + 10 + 30)
 # (nécessite PySide6, pyqtgraph, PyOpenGL, roslibpy, websockets, opencv ; sous Windows : windows\.venv après install.bat)
 ```
 

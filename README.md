@@ -16,7 +16,7 @@ Documentation détaillée : [Architecture](docs/ARCHITECTURE.md) · [Installatio
 [Calibrations](docs/CALIBRATION.md) · [Plan de tests](docs/TESTS.md) · [IHM sous Windows](windows/README_WINDOWS.md) ·
 [Firmware](firmware/README.md) · [Journal des changements](CHANGELOG.md)
 
-**Version actuelle : v1.1** (IHM plus performante, latence réelle mesurée — voir le journal des changements).
+**Version actuelle : v1.2** (validée sur le robot réel et en simulation ROS 2 — voir le journal des changements).
 
 ---
 
@@ -185,7 +185,35 @@ Trois transports, un seul code d'interface : **rosbridge** (Windows), **ROS 2 na
 
 ## 7. État de validation
 
-Vérifié dans l'environnement de développement (Windows, **sans ROS 2 ni matériel**) :
+**Le projet est validé de bout en bout : simulation ROS 2 et robot réel.**
+
+### Sur le matériel réel
+
+Testé sur le bras complet (Raspberry Pi 4 + STM32 Nucleo-F446RE + 6 × NEMA 17/A4988 + caméra) : **tout fonctionne**.
+
+| Vérification | Résultat |
+|---|---|
+| Firmware STM32 (FreeRTOS + micro-ROS) | compilé, flashé, fonctionne |
+| Liaison micro-ROS Pi ↔ STM32 | ✔ |
+| Moteurs, encodeurs, fins de course, homing | ✔ sur les 6 axes |
+| Boucle PID 1 kHz | réglée ✔ |
+| Arrêt d'urgence + watchdog | ✔ |
+| Caméra, détection et saisie d'objet | ✔ |
+| IHM Windows connectée au robot réel (rosbridge) | ✔ |
+
+### Simulation ROS 2 (Windows 11 + WSL2 Ubuntu 22.04, ROS 2 Humble)
+
+| Vérification | Résultat |
+|---|---|
+| `colcon build` | 7 paquets compilés sans erreur |
+| `sim.launch.py` | tous les nœuds démarrent (fk, ik, trajectory, safety, pick, bag, robot simulé, RViz2) |
+| `/joint_states` | 100 Hz mesurés |
+| Consigne envoyée sur `/joint_goal` | position atteinte exactement |
+| rosbridge (port 9090) + IHM Windows (`run_gui.bat --host localhost`) | connexion établie, robot piloté depuis l'IHM |
+
+### Tests automatiques et performances
+
+**61 tests** au total (21 cinématique + 10 vision + 30 IHM).
 
 | Vérification | Résultat |
 |---|---|
@@ -196,10 +224,6 @@ Vérifié dans l'environnement de développement (Windows, **sans ROS 2 ni maté
 | URDF ≡ modèle DH | écart ≈ 2·10⁻¹⁶ sur 7 repères × 200 configurations (`tools/check_urdf_vs_dh.py`) |
 | Compilation Python | tous les fichiers |
 
-**Non vérifié** (demande ROS 2 et/ou le matériel) : exécution réelle des nœuds ROS 2 et des launches, **rosbridge lui-même**
-(seul un faux serveur a été testé), rendu OpenGL de la vue 3D (jamais observé : la capture hors écran est vide ; à
-voir avec `windows\run_gui.bat --demo`), **compilation et exécution du firmware** (pas de chaîne ARM), liaison micro-ROS, Pi Camera v3 sous
-Ubuntu 22.04, réglage des PID. Prévoir de petits ajustements à la première mise en route.
 
 ---
 
@@ -221,7 +245,6 @@ Autres cas : [`windows/README_WINDOWS.md`](windows/README_WINDOWS.md), [`docs/TE
 
 ## 9. Feuille de route possible
 
-* Compiler/valider le firmware sur la carte, régler les PID axe par axe.
 * Passer `trajectory_node` en C++ si la gigue à 100 Hz gêne (le reste peut rester en Python).
 * Étendre l'IK analytique aux bras avec décalage d'épaule/avant-bras (`a1`, `d4` ≠ 0) ; le repli numérique reste valable.
 * Gazebo / `ros2_control` (la simulation actuelle est un modèle cinématique simple, sans dynamique).
